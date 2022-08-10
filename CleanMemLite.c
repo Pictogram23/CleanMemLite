@@ -9,6 +9,7 @@ int main()
     HANDLE hProcessSnap = NULL;
     PROCESSENTRY32 pe32;
     BOOL bRet = FALSE;
+    HANDLE process;
 
     my_pid = GetCurrentProcessId();
 
@@ -40,7 +41,7 @@ int main()
     while (TRUE)
     {
         FILE *file;
-        if (file = fopen("temp", "r"))
+        if (file = fopen("cleanmem_temp", "r"))
         {
             fclose(file);
         }
@@ -49,15 +50,22 @@ int main()
             return 0;
         }
 
-        HANDLE process = OpenProcess(
-            PROCESS_QUERY_INFORMATION |
-                PROCESS_VM_READ |
-                PROCESS_ALL_ACCESS,
-            FALSE, ppid);
-        int emp;
-        emp = EmptyWorkingSet(process);
-        CloseHandle(process);
-        printf("%f\n", emp);
-        Sleep(50);
+        if ((process = OpenProcess(
+                 PROCESS_QUERY_INFORMATION |
+                     PROCESS_VM_READ |
+                     PROCESS_ALL_ACCESS,
+                 FALSE, ppid)) != NULL)
+        {
+            if (!EmptyWorkingSet(process))
+            {
+                printf(TEXT("%lu: EmptyWorkingSet()\n"), GetLastError());
+            }
+            CloseHandle(process);
+        }
+        else
+        {
+            printf(TEXT("%lu: OpenProcess()/n"), GetLastError());
+        }
+        Sleep(100);
     }
 }
